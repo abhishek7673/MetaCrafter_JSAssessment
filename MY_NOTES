@@ -44,3 +44,100 @@ View: The function only reads from the smart contract and will not perform any k
 Pure: The function will neither read nor write anything on the smart contract. They are also called helper functions. For example, you can write any mathematical calculations for your smart contract that neither read data from the blockchain nor writes to the blockchain.
 Payable: These functions have the capability to accept Ether as an input. If you are sending ethers to smart contracts, then you need to make sure that it is only to those functions that are defined as payable.
 Fallback: If an incoming transaction call does not match any of the functions defined in a smart contract, then the call will be directed towards the Fallback function. In other words, if there is a call for a function that doesn't exist, then the call will fall to the Fallback function. The fallback function doesn’t have any arguments and they don’t return any values.
+
+# EVENTS 
+Each transaction has an attached receipt, which contains zero or more log entries. The log entries represent the result of the events having been fired from a smart contract. An event in Solidity is defined as:
+
+event <event_name> (<event_parameters>)
+
+After you have defined an event, you can call it or trigger it from inside any function you wish. You can call an event using the emit keyword in the following manner:
+
+emit <event_name> (<event_arguments>)
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+contract Event {
+    // Event declaration
+    // Up to 3 parameters can be indexed.
+    // Indexed parameters helps you filter the logs by the indexed parameter
+    event messLog(address indexed sender, string message);
+    event messLog2();
+
+    function test() public {
+        emit messLog(msg.sender, "Hello World!");
+        emit messLog(msg.sender, "Hello EVM!");
+        emit messLog2();
+    }
+}
+
+Events
+Indexing Events using Indexed Keyword:
+You can use the indexed keyword before the parameter when you want an event to be indexed. This is useful in case someone wants to search the history and filter the events on a particular index.
+
+These indexed parameters are stored inside the logs inside a special kind of data structure called 'topics'.
+event Transfer(address indexed from, address indexed to, uint amount);
+Deposit Event Example:
+contract Test {
+   event Deposit(address indexed _from, bytes32 indexed _id, uint _value);
+   function deposit(bytes32 _id) public payable {      
+      emit Deposit(msg.sender, _id, msg.value);
+   }
+}
+You can capture the events in your JavaScript code by referring to the web3 object of events using the web3.js library of JavaScript:
+let contract_abi = abi_json _code_during_contract_compilation;
+let EventTest = web3.eth.contract(contract_abi);
+let EventTestContract = ClientReceipt.at("0x98...");
+
+EventTestContract.transfer(function(err, data) {
+   if (!err)
+   console.log(data);
+});
+
+Global Functions And Errors:
+There are four important global functions we'll cover in this lesson:
+
+Address
+Block
+Transaction
+Message
+Global Functions in the Address Context:
+Balance: Returns the balance of the address in Wei. For an address mycontract, the function call is defined as 'mycontract.balance;'. This will return the balance of mycontract in Wei. The return type is uint256.
+transfer(): Sends the given amount of Wei from the current account to the address mentioned. If you want to send x amount of Wei from the current account to an address mycontract, then the function call will be defined as follows: 'mycontract.transfer(uint256 x);'. The problem with the transfer function is if an error occurs during the transaction, the transaction fails.
+send(): Sends the given amount of Wei from the current account to the address mentioned. If you want to send x amount of Wei from the current account to an address mycontract, then the function call will be defined as : 'mycontract.send(uint256 x);'. The return type of the send function is bool, and whenever a transaction encounters an error, the send function returns false. Based on this, appropriate action can be taken. This is what differentiates the send function from the transfer function.
+call(), staticcall() and delegatecall(): These low-level functions don't go through the checks by the Solidity compiler. That's why it is not advised not to use them unless absolutely necessary. The call and staticcall functions work in a similar manner as the transfer or send function. However, delegatecall works differently. If A invokes B who makes a delegatecall to C, then the msg.sender in the delegatecall will be A and not B. This way we can preserve the original sender of the message. All these low-level functions take bytes as input and the return type is a combination of bool and bytes data types.
+Global Functions in the Block Context:
+block.coinbase: Returns the address of the miner rather than the currently mined block
+block.difficulty: Returns the difficulty at the time when the current block was mined
+block.timestamp: Returns the timestamp at which the current block was mined
+block.gaslimit: Returns the total gaslimit of all the transactions mined in the current block
+block.number: Returns the number of the newest block in the blockchain
+
+Global Functions in the Transaction Context:
+tx.gasprice: Returns the gas price of the transaction sent by the sender as part of the transaction
+tx.origin: Returns the address of the original sender of the transaction
+Global Functions in the Message ,ontext
+There are some global functions that are used to capture the properties of the messages. The main functions in the Message context are:
+
+msg.value: Returns the number of Wei that was sent with the message or the transaction
+msg.sender: Returns the immediate sender of the message or the transaction. Unlike tx.origin, msg.sender returns the address of the previous account in the flow of the message. If A sends the message to B and then B sends it to C, then if C calls msg.sender on that message, it will receive the address of B as the return value.
+msg.gasleft: This function returns the remaining gas for the transaction. If an account feels that the gas remaining is inadequate or insufficient for a transaction to complete, then it will fail the transaction.
+# Error Handling:
+There are three methods that constitute the error-handling process in Solidity:
+
+require(): Used to validate certain conditions before further execution of a function. It takes two parameters as an input.
+The first parameter is the condition that you want to validate and the second parameter is the message that will be passed back to the caller if the condition fails. If the condition is satisfied, then the execution of the function continues and the execution jumps to the next statement. 
+
+However, if the condition fails, then the function execution is terminated and the message (the second parameter) is displayed in the logs. The second parameter, however, is optional. require() will work even if you pass only parameter, that is, the condition to be checked. The require() statement is defined as follows:
+
+require(<condition to be validated> , <message to be displayed if the condition fails>);
+
+assert(): The assert function, like require, is a convenience function that checks for conditions. If a condition fails, then the function execution is terminated with an error message.
+assert() takes only one parameter as input. You pass a condition to assert(), and if the condition is true, then the function execution continues and the execution jumps to the next statement in the function. The assert() statement is defined as:
+
+assert(<condition to be checked/validated>);
+
+revert(): Can be used to flag an error and revert the current call. You can also provide a message containing details about the error, and the message will be passed back to the caller. However, the message, like in require(), is an optional parameter. revert() causes the EVM to revert all the changes made to the state, and things return to the initial state or the state before the function call was made.
+The reason for reverting is that there is no safe way to continue execution because something unexpected happened. This is important as it helps in saving gas.
+
+Since the function execution stops after the revert() statement, the remaining gas is also returned back to the user. If you don't use the revert() statement and some error occurs, then the entire gas is lost. Using revert() does not return the consumed gas, however. The gas that is consumed is consumed, and it cannot be returned.
