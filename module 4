@@ -1,0 +1,254 @@
+Fallback functions have following features:
+
+Called when a non-existent function is called on the contract
+Required to be marked external
+Has no name, no arguments, no return and cannot be marked payable
+Defined once per contract
+Throws exception if the contract receives plain Ether without data
+Limited to 2300 gas when called by another function
+
+Introduction to Payable Functions
+Payable functions are used whenever you want your smart contract code to accept Ether from users. So, if your function wants to accept Ether, we need to use payable functions
+
+Payable functions have the following features:
+
+Allows accepting Ether from a caller
+Fails if the sender has not provided Ether
+Other functions do not accept Ether, only payable functions allow it
+Functions and addresses declared payable can receive Ether in the contract
+Fallback Function Example:
+pragma solidity ^0.5.12;
+
+// contract with fallback function
+contract fall {
+  uint n;
+  function set(uint value) external {
+    n = value;
+  }
+
+  function() external payable {
+    n = 0;
+  }
+}
+
+// contract to interact with contract fall
+contract Sendeth {
+  function callfall(fall a) public returns (bool) {
+     // calling a non-existing function
+      (bool success,) = address(a).call(abi.encodeWithSignature("setter()"));
+      require(success);
+
+      // sending ether to contract fall
+      address payable payableA = address(uint160(address(a)));
+      return(payableA.send(2 ether));
+   }
+}
+fallback() external payable
+
+This is a fallback function. It is declared payable, which allows it to accept transfer value.
+
+It is called in the following scenarios:
+
+A contract receives only ether and no data
+No function calls matched even though the account received data
+With this statement (bool success,) = address(a).call(abi.encodeWithSignature("setter()")); we are calling a function signature in contract fall that does not exist. That’s why this call would go to the fallback function and be handled by the fallback function.
+Payable Function Example:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+contract Payable {
+    // Payable address can receive Ether
+    address payable public owner;
+
+    // Payable constructor can receive Ether
+    constructor() payable {
+        owner = payable(msg.sender);
+    }
+
+    // Function to deposit Ether into this contract.
+    // Call this function along with some Ether.
+    // The balance of this contract will be automatically updated.
+    function deposit() public payable {}
+
+    // Call this function along with some Ether.
+    // The function will throw an error since this function is not payable.
+    function notPayable() public {}
+
+   
+}
+
+Abstract Contracts and Interface
+Like any OOPS language, Solidity provides abstract contracts. Abstract contracts are similar to abstract classes in OOPS languages such as Java and Typescript. There is no abstract term in Solidity for establishing an abstract contract. However, if a contract includes unimplemented functions, it becomes abstract.
+
+Instance of an abstract cannot be created
+Derived contract will implement the abstract function and use them as and when required
+Contracts that have at least one function without its implementation is abstract
+Also in the case when we don’t intend to create a contract directly we can consider the contract to be abstract
+Abstract contracts are used as base contracts so that the child contract can inherit and utilize its functions
+Any derived contract inherited from it should provide an implementation for the incomplete functions, and if the derived contract is also not implementing the incomplete functions then that derived contract will also be marked as abstract.
+The abstract contract is an abstract (incomplete / hypothetical) design of a contract. The implementation of contract provides the implementation of the abstract function in it. Once the abstract contract is created, you need to extend it by using is keyword.
+Abstract Contract Example
+pragma solidity ^0.5.0;
+
+contract CalciAbstract {
+   function getResult() public view returns(uint);
+}
+contract Compute is CalciAbstract {
+   function getResult() public view returns(uint) {
+      uint a = 1;
+      uint b = 2;
+      uint result = a + b;
+      return result;
+   }
+}
+
+Introduction to Interface:
+Interfaces can have only unimplemented functions. Also, they are neither compiled nor deployed. They are also called pure abstract contracts
+
+Cannot implement any of their functions. All interface functions are implicitly virtual
+Are defined with the keyword interface
+Cannot inherit other contracts or interfaces (after solidity 6.0.0 interfaces can inherit from interfaces) but other contracts can inherit from interfaces
+Function state mutability can be pure , view , payable or default(blank)
+Fallback functions cannot be defined in an Interface
+Interface functions are implicitly "virtual"
+Cannot define a constructor
+Functions can be defined external only
+Cannot have state variables but local variables definition is allowed
+
+
+Abstract class and Inheritance Comparison
+It's the same as in most other object-oriented programming languages:
+
+Interface only declares functions, cannot implement them
+Abstract class can declare functions (same as interface) as well as implement them.
+Both cannot be instantiated
+Both need to be implemented/inherited from other contract
+
+View and Pure Functions:
+Introduction to view functions
+View function has the following features:
+
+Display the data.
+Do not modify the state variable,
+Are good for reading data operations
+Only reads but doesn’t modify the variables of the state.
+Introduction to pure functions
+Pure functions have the following features:
+
+Do not access data from the blockchain
+Do not allow to read or write operations
+No access to state data or transaction data
+Return type based on the data from a function
+View and Pure Example:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+contract ViewPure {
+    uint public x = 1;
+
+    // Promise not to modify the state.
+    function sumX(uint y) public view returns (uint) {
+        return x + y;
+    }
+
+    // Promise not to modify or read from the state.
+    function sumI(uint i, uint j) public pure returns (uint) {
+        return i + j;
+    }
+}
+Override\Extend ERC20 contracts:
+Introduction:
+The ERC-20 introduces a standard for Fungible Tokens, in other words they have a property that makes each Token be exactly the same (in type and value) as another Token. 
+For example, an ERC-20 Token acts just like ETH, meaning that 1 Token is and will always be equal to all the other Tokens.
+Example functionalities ERC-20 provide are to:
+transfer tokens from one account to another
+get the current token balance of an account
+get the total supply of the token available on the network
+approve whether an amount of token from an account can be spent by a third-party account
+ERC20 Contracts:
+ERC20 standard interface has following functions and events:
+
+Total Supply: The total number of tokens that will ever be issued
+Balance Of: The account balance of a token owner's account
+Transfer: Automatically executes transfers of a specified number of tokens to a specified address for transactions using the token
+Transfer From: Automatically executes transfers of a specified number of tokens from a specified address using the token
+Approve: Allows a spender to withdraw a set number of tokens from a specified account, up to a specific amount
+Allowance: Returns a set number of tokens from a spender to the owner
+Transfer: An event triggered when a transfer is successful (an event)
+Approval: A log of an approved event (an event)
+The ERC20 standard defines a set of functions to be implemented by all ERC20 tokens so as to allow integration with other contracts, wallets, or marketplaces.
+
+function totalSupply() public view returns (uint256);
+function balanceOf(address tokenOwner) public view returns (uint);
+function allowance(address tokenOwner, address spender)
+public view returns (uint);
+function transfer(address to, uint tokens) public returns (bool);
+function approve(address spender, uint tokens)  public returns (bool);
+function transferFrom(address from, address to, uint tokens) public returns (bool);
+ERC20 Standard events:
+event Approval(address indexed tokenOwner, address indexed spender,
+ uint tokens);
+event Transfer(address indexed from, address indexed to,
+ uint tokens);
+Overriding ERC20 contract
+Override: You can change some behavior of parent contract function by using the “override” keyword and overriding the parent function in child contract. Below the example, you can see that we have overriden “decimals” function of ERC20 contract to have just 8 digits for our custom token
+function decimals() public view virtual override returns (uint8) {
+        return 8;
+    }
+super: The super keyword will let you call functions defined in a parent contract in their original form. They can be used in child contract using “super” keyword exactly as they are defined in parent contract even if they are overriden.
+super.revokeRole(role, account);
+Hooks: Hooks are just simple functions that are called before or after some action takes place. They provide a centralized point to hook into and extend the original behavior.
+pragma solidity ^0.6.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract ERC20WithSafeTransfer is ERC20 {
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal virtual override
+    {
+        super._beforeTokenTransfer(from, to, amount);
+
+        require(_validRecipient(to), "ERC20WithSafeTransfer: invalid recipient");
+    }
+
+    function _validRecipient(address to) private view returns (bool) {
+        ...
+    }
+
+    ...
+}
+Creating Custom Tokens:
+Creating an ERC20 token is quite simple since templates for all different types of tokens are available on the OpenZeppelin allowing us to create tokens effortlessly.
+
+In order to create an ERC20 token, you need the following:
+
+The Token’s Name
+The Token’s Symbol
+The Token’s Decimal Places
+The Total Number of Tokens in Circulation
+Please set the below variables in your contract with relevant values
+string public constant name;
+string public constant symbol;
+uint8 public constant decimals;
+uint256 totalSupply_;
+constructor(uint256 total) public {
+   totalSupply_ = total;
+   balances[msg.sender] = _totalSupply;
+}
+example/:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.0.0/contracts/token/ERC20/ERC20.sol";
+
+contract Mtoken is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+        // Mint 100 tokens to msg.sender
+        // Similar to how
+        // 1 dollar = 100 cents
+        // 1 token = 1 * (10 ** decimals)
+        
+        _mint(msg.sender, 100 * 10**uint(decimals()));
+    }
+
+}
